@@ -1,12 +1,12 @@
 /*
- * PiCAM.h
+ * arducam.h
  *
  *  Created on: 2015.01.16
  *      Author: Lee
  */
 
-#ifndef SRC_PICAM_H_
-#define SRC_PICAM_H_
+#ifndef SRC_ARDUCAM_H_
+#define SRC_ARDUCAM_H_
 
 /*
   ArduCAM.h - Arduino library support for CMOS Image Sensor
@@ -66,8 +66,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include <wiringPi.h>
-#include <wiringPiI2C.h>
 
 #define regtype volatile uint8_t
 #define regsize uint8_t
@@ -95,29 +93,46 @@
 /****************************************************/
 /* Sensor related definition 												*/
 /****************************************************/
-#define BMP 	0
-#define JPEG	1
+typedef enum {
+  fmtBMP,
+  fmtJPEG
+} image_format_t;
 
-#define OV7670	0
-#define MT9D111	1
-#define OV7675	2
-#define OV5642	3
-#define OV3640  4
-#define OV2640  5
-#define OV9655	6
-#define MT9M112	7
-#define OV7725	8
-#define OV7660	9
+typedef enum {
+  smOV7670,
+  smMT9D111,
+  smOV7675,
+  smOV5642,
+  smOV3640,
+  smOV2640,
+  smOV9655,
+  smMT9M112,
+  smOV7725,
+  smOV7660
+} sensor_model_t;
 
-#define OV2640_160x120 		0	//160x120
-#define OV2640_176x144 		1	//176x144
-#define OV2640_320x240 		2	//320x240
-#define OV2640_352x288 		3	//352x288
-#define OV2640_640x480		4	//640x480
-#define OV2640_800x600 		5	//800x600
-#define OV2640_1024x768		6	//1024x768
-#define OV2640_1280x1024	7	//1280x1024
-#define OV2640_1600x1200	8	//1600x1200
+typedef enum {
+  sz160x120,
+  sz176x144,
+  sz320x240,
+  sz352x288,
+  sz640x480,
+  sz800x600,
+  sz1024x768,
+  sz1280x1024,
+  sz1600x1200
+} jpeg_size_t;
+
+struct sensor_reg {
+  uint16_t reg;
+  uint16_t val;
+};
+
+struct CAM {
+  image_format_t m_fmt;
+  sensor_model_t sensor_model;
+  uint8_t sensor_addr;
+};
 
 /****************************************************/
 /* I2C Control Definition 													*/
@@ -178,51 +193,21 @@
 /****************************************************************/
 /* define a structure for sensor register initialization values */
 /****************************************************************/
-struct sensor_reg {
-	uint16_t reg;
-	uint16_t val;
-};
 
-struct CAM{
-	uint8_t m_fmt;
-	uint8_t sensor_model;
-	uint8_t sensor_addr;
-};
+int arducam(sensor_model_t model);
+void arducam_init();
 
-struct CAM myCAM;
-int FD;//I2C返回值
-int spi1,sp2;//spi返回值
-FILE * fp;//SD卡文件返回值
-char filePath[20];
-char nowtime[20];//当前时间
+void arducam_flush_fifo(void);
+void arducam_start_capture(void);
+void arducam_clear_fifo_flag(void);
+uint8_t arducam_read_fifo(void);
 
+uint8_t arducam_read_reg(uint8_t addr);
+void arducam_write_reg(uint8_t addr, uint8_t data);
 
-int PiCAM(uint8_t model);
-void InitCAM();
-void delayms();
+void arducam_set_jpeg_size(jpeg_size_t size);
+void arducam_set_format(image_format_t fmt);
 
-void flush_fifo(void);
-void capture(void);
-void clear_fifo_flag(void);
-uint8_t read_fifo(void);
+#include "arducam_arch.h"
 
-uint8_t read_reg(uint8_t addr);
-void write_reg(uint8_t addr, uint8_t data);
-
-int wrSensorRegs8_8(const struct sensor_reg*);
-int wrSensorRegs8_16(const struct sensor_reg*);
-int wrSensorRegs8_16(const struct sensor_reg reglist[]);
-
-uint8_t wrSensorReg8_8(uint8_t regID, uint8_t regDat);
-uint8_t wrSensorReg8_16(uint8_t regID, uint16_t regDat);
-uint8_t wrSensorReg16_8(uint16_t regID, uint8_t regDat);
-
-uint8_t rdSensorReg8_8(uint8_t regID, uint8_t* regDat);
-uint8_t rdSensorReg8_16(uint8_t regID, uint16_t* regDat);
-uint8_t rdSensorReg16_8(uint16_t regID, uint8_t* regDat);
-
-void OV2640_set_JPEG_size(uint8_t size);
-void set_format(uint8_t fmt);
-
-
-#endif /* SRC_PICAM_H_ */
+#endif /* SRC_ARDUCAM_H_ */

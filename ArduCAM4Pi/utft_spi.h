@@ -65,9 +65,6 @@
 
 #define BMPIMAGEOFFSET 66
 
-#define	SPI_ARDUCAM_SPEED	1000000
-#define	SPI_ARDUCAM		      0
-
 #define swap(type, i, j) {type t = i; i = j; j = t;}
 
 struct _current_font
@@ -87,9 +84,6 @@ uint8_t fcolorr,fcolorg,fcolorb;
 uint8_t bcolorr,bcolorg,bcolorb;
 
 void UTFT();
-
-void bus_write(uint8_t address, uint8_t value);
-uint8_t bus_read(uint8_t address);
 
 void LCD_Writ_Bus(char VH,char VL, uint8_t mode);
 void LCD_Write_DATA(char VH,char VL);

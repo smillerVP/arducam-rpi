@@ -5,7 +5,8 @@
  *      Author: Administrator
  */
 
-#include "UTFT_SPI.h"
+#include "arducam_arch.h"
+#include "utft_spi.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <wiringPi.h>
@@ -21,23 +22,6 @@ void UTFT()
 	display_model=model;
 }
 
-void bus_write(uint8_t address, uint8_t value)
-{
-	uint8_t spiData [2] ;
-	spiData [0] = address ;
-  	spiData [1] = value ;
-	wiringPiSPIDataRW (SPI_ARDUCAM, spiData, 2) ;
-}
-
-uint8_t bus_read(uint8_t address)
-{
-	uint8_t spiData[2];
-	spiData[0] = address ;
-	spiData[1] = 0x00 ;
-  	wiringPiSPIDataRW (SPI_ARDUCAM, spiData, 2) ;
-  	return spiData[1];
-}
-
 void LCD_Write_COM_DATA(char com1,int dat1)
 {
      LCD_Write_COM(com1);
@@ -46,13 +30,13 @@ void LCD_Write_COM_DATA(char com1,int dat1)
 
 void LCD_Write_COM(char VL)
 {
-	bus_write(0xBE, VL);
+	arducam_spi_write(0xBE, VL);
 }
 
 void LCD_Write_DATA(char VH,char VL)
 {
-	bus_write(0xBF, VH);
-  	bus_write(0xBF, VL);
+	arducam_spi_write(0xBF, VH);
+  	arducam_spi_write(0xBF, VL);
 }
 
 void LCD_Writ_Bus(char VH,char VL, uint8_t mode)

@@ -1,40 +1,44 @@
-all : OV2640_Playback	OV3640_Playback	OV5642_Playback	OV7670_Playback OV2640_DigitalCamera	OV5642_DigitalCamera
+all : ov2640_playback	ov3640_playback	ov5642_playback	ov7670_playback ov2640_digital_camera	ov5642_digital_camera ov2640_capture
 
-objects = DefaultFonts_SPI.o UTFT_SPI.o PiCAM.o
+objects = default_fonts_spi.o utft_spi.o arducam.o arducam_arch_raspberrypi.o
 
-OV2640_Playback : $(objects) PiCAM_OV2640_Playback.o 
-	gcc -o OV2640_Playback $(objects) PiCAM_OV2640_Playback.o -lwiringPi
-OV3640_Playback : $(objects) PiCAM_OV3640_Playback.o 
-	gcc -o OV3640_Playback $(objects) PiCAM_OV3640_Playback.o -lwiringPi
-OV5642_Playback : $(objects) PiCAM_OV5642_Playback.o 
-	gcc -o OV5642_Playback $(objects) PiCAM_OV5642_Playback.o -lwiringPi
-OV7670_Playback : $(objects) PiCAM_OV7670_Playback.o 
-	gcc -o OV7670_Playback $(objects) PiCAM_OV7670_Playback.o -lwiringPi
-OV2640_DigitalCamera : $(objects) PiCAM_OV2640_DigitalCamera.o 
-	gcc -o OV2640_DigitalCamera $(objects) PiCAM_OV2640_DigitalCamera.o -lwiringPi
-OV5642_DigitalCamera : $(objects) PiCAM_OV5642_DigitalCamera.o 
-	gcc -o OV5642_DigitalCamera $(objects) PiCAM_OV5642_DigitalCamera.o -lwiringPi
+ov2640_playback : $(objects) arducam_ov2640_playback.o 
+	gcc -o ov2640_playback $(objects) arducam_ov2640_playback.o -lwiringPi -Wall
+ov3640_playback : $(objects) arducam_ov3640_playback.o 
+	gcc -o ov3640_playback $(objects) arducam_ov3640_playback.o -lwiringPi -Wall
+ov5642_playback : $(objects) arducam_ov5642_playback.o 
+	gcc -o ov5642_playback $(objects) arducam_ov5642_playback.o -lwiringPi -Wall
+ov7670_playback : $(objects) arducam_ov7670_playback.o 
+	gcc -o ov7670_playback $(objects) arducam_ov7670_playback.o -lwiringPi -Wall
+ov2640_digital_camera : $(objects) arducam_ov2640_digital_camera.o 
+	gcc -o ov2640_digital_camera $(objects) arducam_ov2640_digital_camera.o -lwiringPi -Wall
+ov2640_capture : $(objects) arducam_ov2640_capture.o 
+	gcc -o ov2640_capture $(objects) arducam_ov2640_capture.o -lwiringPi -Wall
+ov5642_digital_camera : $(objects) arducam_ov5642_digital_camera.o 
+	gcc -o ov5642_digital_camera $(objects) arducam_ov5642_digital_camera.o -lwiringPi -Wall
 	
-DefaultFonts_SPI.o : DefaultFonts_SPI.c
-	gcc -c DefaultFonts_SPI.c -lwiringPi
-UTFT_SPI.o : UTFT_SPI.c
-	gcc -c UTFT_SPI.c -lwiringPi
-PiCAM.o : PiCAM.c
-	gcc -c PiCAM.c -lwiringPi
-PiCAM_OV2640_Playback.o : PiCAM_OV2640_Playback.c
-	gcc -c PiCAM_OV2640_Playback.c -lwiringPi
-PiCAM_OV3640_Playback.o : PiCAM_OV3640_Playback.c
-	gcc -c PiCAM_OV3640_Playback.c -lwiringPi
-PiCAM_OV5642_Playback.o : PiCAM_OV5642_Playback.c
-	gcc -c PiCAM_OV5642_Playback.c -lwiringPi
-PiCAM_OV7670_Playback.o : PiCAM_OV7670_Playback.c
-	gcc -c PiCAM_OV7670_Playback.c -lwiringPi
-PiCAM_OV2640_DigitalCamera.o : PiCAM_OV2640_DigitalCamera.c
-	gcc -c PiCAM_OV2640_DigitalCamera.c -lwiringPi
-PiCAM_OV5642_DigitalCamera.o : PiCAM_OV5642_DigitalCamera.c
-	gcc -c PiCAM_OV5642_DigitalCamera.c -lwiringPi	
+default_fonts_spi.o : default_fonts_spi.c
+	gcc -c default_fonts_spi.c -lwiringPi -Wall
+utft_spi.o : utft_spi.c
+	gcc -c utft_spi.c -lwiringPi -Wall
+arducam.o : arducam.c
+	gcc -c arducam.c -lwiringPi -Wall
+arducam_arch_raspberrypi.o : arducam_arch_raspberrypi.c
+	gcc -c arducam_arch_raspberrypi.c -lwiringPi -Wall
+arducam_ov2640_playback.o : arducam_ov2640_playback.c
+	gcc -c arducam_ov2640_playback.c -lwiringPi -Wall
+arducam_ov3640_playback.o : arducam_ov3640_playback.c
+	gcc -c arducam_ov3640_playback.c -lwiringPi -Wall
+arducam_ov5642_playback.o : arducam_ov5642_playback.c
+	gcc -c arducam_ov5642_playback.c -lwiringPi -Wall
+arducam_ov7670_playback.o : arducam_ov7670_playback.c
+	gcc -c arducam_ov7670_playback.c -lwiringPi -Wall
+arducam_ov2640_digital_camera.o : arducam_ov2640_digital_camera.c
+	gcc -c arducam_ov2640_digital_camera.c -lwiringPi -Wall
+arducam_ov2640_capture.o : arducam_ov2640_capture.c
+	gcc -c arducam_ov2640_capture.c -lwiringPi -Wall
+arducam_ov5642_digital_camera.o : arducam_ov5642_digital_camera.c
+	gcc -c arducam_ov5642_digital_camera.c -lwiringPi -Wall	
 
 clean : 
-	rm OV2640_Playback OV3640_Playback OV5642_Playback OV7670_Playback OV2640_DigitalCamera OV5642_DigitalCamera $(objects) /
-	PiCAM_OV2640_Playback.o PiCAM_OV3640_Playback.o PiCAM_OV5642_Playback.o PiCAM_OV7670_Playback.o /
-	PiCAM_OV2640_DigitalCamera.o PiCAM_OV5642_DigitalCamera.o
+	rm -f ov2640_playback ov3640_playback ov5642_playback ov7670_playback ov2640_digital_camera ov2640_capture ov5642_digital_camera $(objects) *.o
