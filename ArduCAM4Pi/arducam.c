@@ -1,64 +1,4 @@
-/*
- * arducam.c
- *
- *  Created on: 2015.01.16
- *      Author: Lee
- */
 
-
-/*
-  ArduCAM.cpp - Arduino library support for CMOS Image Sensor
-  Copyright (C)2011-2013 ArduCAM.com. All right reserved
-
-  Basic functionality of this library are based on the demo-code provided by
-  ArduCAM.com. You can find the latest version of the library at
-  http://www.ArduCAM.com
-
-  Now supported controllers:
-		-	OV7670
-		-	MT9D111
-		-	OV7675
-		-	OV2640
-		-	OV3640
-		-	OV5642
-		-	OV7660
-		-	OV7725
-
-	We will add support for many other sensors in next release.
-
-  Supported MCU platform
- 		-	Theoretically support all Arduino families
-  		-	Arduino UNO R3			(Tested)
-  		-	Arduino MEGA2560 R3		(Tested)
-  		-	Arduino Leonardo R3		(Tested)
-  		-	Arduino Nano			(Tested)
-  		-	Arduino DUE				(Tested)
-  		-	Arduino Yun				(Tested)
-  		-	Raspberry Pi			(Tested)
-
-  If you make any modifications or improvements to the code, I would appreciate
-  that you share the code with me so that I might include it in the next release.
-  I can be contacted through http://www.ArduCAM.com
-
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 2.1 of the License, or (at your option) any later version.
-
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
-
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-*/
-
-/*------------------------------------
-	Revision History:
-	2015/01/16 	V1.0	by Lee	first release for Raspberry Pi
---------------------------------------*/
 
 #include "arducam.h"
 #include "arducam_arch.h"
@@ -67,10 +7,11 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <time.h>
+ 
 
-static struct CAM myCAM;
+static struct CAM myCAM; 
 
-int arducam(sensor_model_t model)
+int arducam(sensor_model_t model,int SPI_CS1, int SPI_CS2, int SPI_CS3, int SPI_CS4)
 {
 	myCAM.sensor_model = model;
 	switch(myCAM.sensor_model)
@@ -99,22 +40,45 @@ int arducam(sensor_model_t model)
 			myCAM.sensor_addr = 0x21;
 			break;
 	}
-	if (!arducam_spi_init()) {
-		printf("ERROR: SPI init failed\n");
-		return 0;
-	}
+	if(SPI_CS1>=0)
+		{
+			if (!arducam_spi_init(SPI_CS1)) {
+				printf("ERROR: SPI1 init failed\n");
+				//return 0;
+			}
+	 }
+	 if(SPI_CS2>=0)
+	 	{
+			if (!arducam_spi_init(SPI_CS2)) {
+				printf("ERROR: SPI2 init failed\n");
+				//return 0;
+			}
+   }
+   if(SPI_CS3>=0)
+   	{
+			if (!arducam_spi_init(SPI_CS3)) {
+				printf("ERROR: SPI3 init failed\n");
+				//return 0;
+			}
+    }
+    if(SPI_CS4>=0)
+     {
+				if (!arducam_spi_init(SPI_CS4)) {
+					printf("ERROR: SPI4 init failed\n");
+					//return 0;
+				}
+     }
 
 	// initialize i2c:
 	if (!arducam_i2c_init(myCAM.sensor_addr)) {
 		printf("ERROR: I2C init failed\n");
-		return 0;
+		//return 0;
 	}
 	return 1;
 }
 
 void arducam_init()
 {
-	uint8_t reg_val;
 	switch(myCAM.sensor_model) {
 #ifdef OV7660_CAM
 		case smOV7660:
@@ -169,24 +133,22 @@ void arducam_init()
 			arducam_i2c_write16(0xf0, 0x00);
 			arducam_i2c_write16(0x21, 0x8403); //Mirror Column
 			arducam_i2c_write16(0xC6, 0xA103);//SEQ_CMD
-        	arducam_i2c_write16(0xC8, 0x0005); //SEQ_CMD
+      arducam_i2c_write16(0xC8, 0x0005); //SEQ_CMD
 			break;
 		}
 #endif
 
 #ifdef OV5642_CAM
+   uint8_t reg_val;
 		case smOV5642:
-		{
+		{	
 			arducam_i2c_word_write(0x3008, 0x80);
-
 			arducam_delay_ms(100);
 			if(myCAM.m_fmt == fmtJPEG)
-			{
-				arducam_i2c_write_word_regs(OV5642_1080P_Video_setting);
-				arducam_i2c_word_read(0x3818,&reg_val);
-				arducam_i2c_word_write(0x3818, (reg_val | 0x20) & 0xBf);
-				arducam_i2c_word_read(0x3621,&reg_val);
-				arducam_i2c_word_write(0x3621, reg_val | 0x20);
+			{	
+				arducam_i2c_write_word_regs(ov5642_dvp_fmt_global_init); 
+				arducam_delay_ms(100); 
+        arducam_i2c_write_word_regs(ov5642_dvp_fmt_jpeg_qvga);
 			}
 			else
 			{
@@ -222,8 +184,7 @@ void arducam_init()
 				arducam_i2c_write(0xff, 0x01);
 				arducam_i2c_write(0x15, 0x00);
 				arducam_i2c_write_regs(OV2640_320x240_JPEG);
-				//arducam_i2c_write(0xff, 0x00);
-				//arducam_i2c_write(0x44, 0x32);
+
 			}
 			else
 			{
@@ -243,46 +204,67 @@ void arducam_init()
 
 			break;
 		}
-
 		default:
-
 			break;
 	}
 }
 
-void arducam_flush_fifo(void)
+void arducam_flush_fifo(int SPI_CS)
 {
-	arducam_write_reg(ARDUCHIP_FIFO, FIFO_CLEAR_MASK);
+	arducam_write_reg(ARDUCHIP_FIFO, FIFO_CLEAR_MASK, SPI_CS);
 }
 
-void arducam_start_capture(void)
+void arducam_start_capture(int SPI_CS)
 {
-	arducam_write_reg(ARDUCHIP_FIFO, FIFO_START_MASK);
+	arducam_write_reg(ARDUCHIP_FIFO, FIFO_START_MASK, SPI_CS);
 }
 
-void arducam_clear_fifo_flag(void)
+void arducam_clear_fifo_flag(int SPI_CS)
 {
-	arducam_write_reg(ARDUCHIP_FIFO, FIFO_CLEAR_MASK);
+	arducam_write_reg(ARDUCHIP_FIFO, FIFO_CLEAR_MASK,SPI_CS);
 }
 
-uint8_t arducam_read_fifo(void)
+uint8_t arducam_read_fifo(int SPI_CS)
 {
 	uint8_t data;
-	data = arducam_spi_read(0x3D);
+	data = arducam_spi_read(0x3D, SPI_CS);
 	return data;
 }
 
-uint8_t arducam_read_reg(uint8_t addr)
+uint8_t arducam_read_reg(uint8_t addr,int SPI_CS)
 {
 	uint8_t data;
-	data = arducam_spi_read(addr & 0x7F);
+	data = arducam_spi_read(addr & 0x7F, SPI_CS);
+	
 	return data;
 }
 
-void arducam_write_reg(uint8_t addr, uint8_t data)
+void arducam_write_reg(uint8_t addr, uint8_t data, int SPI_CS)
 {
-	arducam_spi_write(addr | 0x80, data);
+	arducam_spi_write(addr | 0x80, data, SPI_CS);
 }
+
+
+//My add
+//Set corresponding bit  
+void set_bit(uint8_t addr, uint8_t bit, int SPI_CS)
+{
+	uint8_t temp;
+	temp = arducam_read_reg(addr, SPI_CS);
+	arducam_write_reg(addr, temp | bit, SPI_CS);
+
+}
+//Clear corresponding bit 
+void clear_bit(uint8_t addr, uint8_t bit, int SPI_CS)
+{
+	uint8_t temp;
+	temp = arducam_read_reg(addr,SPI_CS);
+	arducam_write_reg(addr, temp & (~bit), SPI_CS);
+
+}
+
+
+
 
 void arducam_set_jpeg_size(jpeg_size_t size)
 {
@@ -310,8 +292,8 @@ void arducam_set_jpeg_size(jpeg_size_t size)
 		case sz1024x768:
 			arducam_i2c_write_regs(OV2640_1024x768_JPEG);
 			break;
-		case sz1280x1024:
-			arducam_i2c_write_regs(OV2640_1280x1024_JPEG);
+		case sz1280x960:
+			arducam_i2c_write_regs(OV2640_1280x960_JPEG);
 			break;
 		case sz1600x1200:
 			arducam_i2c_write_regs(OV2640_1600x1200_JPEG);
@@ -321,6 +303,56 @@ void arducam_set_jpeg_size(jpeg_size_t size)
 			break;
 	}
 #endif
+
+}
+
+void arducam_OV5642_set_jpeg_size(jpeg_size_t size)
+{
+#if defined OV5642_CAM
+
+	arducam_i2c_write_word_regs(ov5642_dvp_fmt_global_init); 
+	delay(100); 
+	switch(size)
+	{
+		case OV5642_320x240:	
+			arducam_i2c_write_word_regs(ov5642_dvp_fmt_jpeg_qvga);
+
+			break;
+		case OV5642_640x480:	
+			arducam_i2c_write_word_regs(ov5642_dvp_fmt_jpeg_vga);
+
+			break;
+//		case OV5642_1280x720:
+//			
+//			arducam_i2c_write_word_regs(ov5642_dvp_fmt_jpeg_qvga);
+//			arducam_i2c_write_word_regs(ov5642_res_720P);
+//
+//			break;
+		case OV5642_1920x1080:
+			  arducam_i2c_write_word_regs(OV5642_1080P_Video_setting);
+		    arducam_i2c_write_word_regs(ov5642_dvp_fmt_jpeg_qvga);
+			break;
+		case OV5642_2048x1536:
+			arducam_i2c_write_word_regs(ov5642_dvp_fmt_jpeg_qxga);
+		  arducam_i2c_word_write(0x3818, 0xA8); 
+			arducam_i2c_word_write(0x3621, 0x10); 
+			arducam_i2c_word_write(0x3801 , 0xC8);
+			
+			break;
+		case OV5642_2592x1944:
+			arducam_i2c_write_word_regs(ov5642_dvp_fmt_jpeg_5M);
+      arducam_i2c_word_write(0x4407,0x08); 
+			arducam_i2c_word_write(0x3818, 0xA8); 
+			arducam_i2c_word_write(0x3621, 0x10); 
+			arducam_i2c_word_write(0x3801 , 0xC8);
+			break;
+		default:
+			arducam_i2c_write_word_regs(ov5642_dvp_fmt_jpeg_qvga);
+			break;
+	}
+
+	#endif
+
 }
 
 void arducam_set_format(image_format_t fmt)
