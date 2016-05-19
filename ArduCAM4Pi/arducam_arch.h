@@ -3,13 +3,14 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "arducam.h"
+//#include "arducam.h"
 
-bool arducam_spi_init(void);
+bool wiring_init(void);
+bool arducam_spi_init(int SPI_CS);
 bool arducam_i2c_init(uint8_t sensor_addr);
 
-void arducam_spi_write(uint8_t address, uint8_t value);
-uint8_t arducam_spi_read(uint8_t address);
+void arducam_spi_write(uint8_t address, uint8_t value, int SPI_CS);
+uint8_t arducam_spi_read(uint8_t address, int SPI_CS);
 
 // Delay execution for delay milliseconds
 void arducam_delay_ms(uint32_t delay);
@@ -35,4 +36,4 @@ int arducam_i2c_write_regs16(const struct sensor_reg reglist[]);
 // Write 8 bit values to 16 bit register address
 int arducam_i2c_write_word_regs(const struct sensor_reg reglist[]);
 
-#endif // __ARDUCAM_ARCH_H__
+#endif 

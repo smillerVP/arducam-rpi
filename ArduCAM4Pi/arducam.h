@@ -17,14 +17,9 @@
   http://www.ArduCAM.com
 
   Now supported controllers:
-		-	OV7670
-		-	MT9D111
-		-	OV7675
 		-	OV2640
-		-	OV3640
 		-	OV5642
-		-	OV7660
-		-	OV7725
+
 	We will add support for many other sensors in next release.
 
   Supported MCU platform
@@ -66,6 +61,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <wiringPi.h>
+
+#include <wiringPiI2C.h>
 
 #define regtype volatile uint8_t
 #define regsize uint8_t
@@ -89,6 +87,28 @@
   #undef F
 #endif
 #define F(X) (X)
+
+//****************************************************/
+//* Camera Choose Pin Definition	
+
+//****************************************************/
+//   CAM_CS  |    BCM   |   wPi
+/****************************************************/								
+//   CAM1_CS |    17    |    0
+//---------------------------------------------------/   
+//   CAM2_CS |    23    |    4
+//---------------------------------------------------/ 
+//   CAM3_CS |    22    |    3
+//---------------------------------------------------/  
+//   CAM4_CS |    24    |    5
+/****************************************************/
+
+#define CAM1_CS 0
+#define CAM2_CS 4
+#define CAM3_CS 3
+#define CAM4_CS 5
+
+
 
 /****************************************************/
 /* Sensor related definition 												*/
@@ -119,8 +139,14 @@ typedef enum {
   sz640x480,
   sz800x600,
   sz1024x768,
-  sz1280x1024,
-  sz1600x1200
+  sz1280x960,
+  sz1600x1200,
+  OV5642_320x240,
+  OV5642_640x480,
+  //OV5642_1280x720,
+  OV5642_1920x1080,
+  OV5642_2048x1536,
+  OV5642_2592x1944
 } jpeg_size_t;
 
 struct sensor_reg {
@@ -163,6 +189,12 @@ struct CAM {
 #define CAM2LCD_MODE       		0x01
 #define LCD2MCU_MODE       		0x02
 
+
+#define ARDUCHIP_GPIO			  0x06  //GPIO Write Register
+#define GPIO_RESET_MASK			0x01  //0 = default state,		1 =  Sensor reset IO value
+#define GPIO_PWDN_MASK			0x02  //0 = Sensor power down IO value, 1 = Sensor power enable IO value
+
+
 #define ARDUCHIP_TIM       		0x03  //Timming control
 #define HREF_LEVEL_MASK    		0x01  //0 = High active , 		1 = Low active
 #define VSYNC_LEVEL_MASK   		0x02  //0 = High active , 		1 = Low active
@@ -194,20 +226,24 @@ struct CAM {
 /* define a structure for sensor register initialization values */
 /****************************************************************/
 
-int arducam(sensor_model_t model);
+int arducam(sensor_model_t model,int SPI_CS1, int SPI_CS2, int SPI_CS3, int SPI_CS4);
 void arducam_init();
 
-void arducam_flush_fifo(void);
-void arducam_start_capture(void);
-void arducam_clear_fifo_flag(void);
-uint8_t arducam_read_fifo(void);
+void arducam_flush_fifo(int SPI_CS);
+void arducam_start_capture(int SPI_CS);
+void arducam_clear_fifo_flag(int SPI_CS);
+uint8_t arducam_read_fifo(int SPI_CS);
 
-uint8_t arducam_read_reg(uint8_t addr);
-void arducam_write_reg(uint8_t addr, uint8_t data);
+uint8_t arducam_read_reg(uint8_t addr, int SPI_CS);
+void arducam_write_reg(uint8_t addr, uint8_t data, int SPI_CS);
 
 void arducam_set_jpeg_size(jpeg_size_t size);
 void arducam_set_format(image_format_t fmt);
+void arducam_OV5642_set_jpeg_size(jpeg_size_t size);
+
+void set_bit(uint8_t addr, uint8_t bit, int SPI_CS);
+void clear_bit(uint8_t addr, uint8_t bit, int SPI_CS);
 
 #include "arducam_arch.h"
 
-#endif /* SRC_ARDUCAM_H_ */
+#endif
