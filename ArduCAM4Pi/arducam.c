@@ -1,5 +1,9 @@
+/*-----------------------------------------
 
+//Update History:
+//2016/06/13 	V1.1	by Lee	add support for burst mode
 
+--------------------------------------*/
 #include "arducam.h"
 #include "arducam_arch.h"
 #include "memorysaver.h"
@@ -224,6 +228,35 @@ void arducam_clear_fifo_flag(int SPI_CS)
 	arducam_write_reg(ARDUCHIP_FIFO, FIFO_CLEAR_MASK,SPI_CS);
 }
 
+uint32_t read_fifo_length(int SPI_CS)
+{
+	
+	uint32_t len1,len2,len3,length=0;
+	len1 = arducam_read_reg(FIFO_SIZE1, SPI_CS);
+  len2 = arducam_read_reg(FIFO_SIZE2, SPI_CS);
+  len3 = arducam_read_reg(FIFO_SIZE3, SPI_CS) & 0x07;
+  length = ((len3 << 16) | (len2 << 8) | len1) & 0x07ffff;
+	return length;
+	
+}
+
+void arducam_transfer(uint8_t data)
+{
+  arducam_spi_transfer(data);
+}
+
+void arducam_transfers(uint8_t *buf, uint32_t size)
+{
+	arducam_spi_transfers(buf, size);
+}
+
+void set_fifo_burst(uint8_t data)
+{
+	arducam_transfer(data);
+}
+
+
+
 uint8_t arducam_read_fifo(int SPI_CS)
 {
 	uint8_t data;
@@ -244,7 +277,6 @@ void arducam_write_reg(uint8_t addr, uint8_t data, int SPI_CS)
 	arducam_spi_write(addr | 0x80, data, SPI_CS);
 }
 
-
 //My add
 //Set corresponding bit  
 void set_bit(uint8_t addr, uint8_t bit, int SPI_CS)
@@ -262,6 +294,8 @@ void clear_bit(uint8_t addr, uint8_t bit, int SPI_CS)
 	arducam_write_reg(addr, temp & (~bit), SPI_CS);
 
 }
+
+
 
 
 

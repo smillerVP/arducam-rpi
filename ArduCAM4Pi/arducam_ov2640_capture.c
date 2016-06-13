@@ -1,4 +1,9 @@
+/*-----------------------------------------
 
+//Update History:
+//2016/06/13 	V1.1	by Lee	add support for burst mode
+
+--------------------------------------*/
 #include <string.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -11,8 +16,8 @@
 #define OV2640_CHIPID_HIGH  0x0A
 #define OV2640_CHIPID_LOW   0x0B
 
-#define BUF_SIZE (128*1024)
-
+#define BUF_SIZE (384*1024)
+uint8_t buffer[BUF_SIZE] = {0xFF};
 void setup()
 {
     uint8_t vid,pid;
@@ -48,10 +53,8 @@ void setup()
 
 int main(int argc, char *argv[])
 {
-    uint8_t buf[BUF_SIZE];
-    int i = 0;
-    uint8_t temp, temp_last;
-    if (argc == 1) {
+    if (argc == 1)
+    {
         printf("Usage: %s [-s <resolution>] | [-c <filename]", argv[0]);
         printf(" -s <resolution> Set resolution, valid resolutions are:\n");
         printf("                   160x120\n");
@@ -67,102 +70,78 @@ int main(int argc, char *argv[])
         exit(EXIT_SUCCESS);
     }
 
-//    if (strcmp(argv[1], "-s") == 0 && argc == 3) {
-//        setup();
-//        arducam_set_format(fmtJPEG);
-//        arducam_init();
-//        // Change to JPEG capture mode and initialize the OV2640 module   
-//        if (strcmp(argv[2], "160x120") == 0) arducam_set_jpeg_size(sz160x120);
-//        else if (strcmp(argv[2], "176x144") == 0) arducam_set_jpeg_size(sz176x144);
-//        else if (strcmp(argv[2], "320x240") == 0) arducam_set_jpeg_size(sz320x240);
-//        else if (strcmp(argv[2], "352x288") == 0) arducam_set_jpeg_size(sz352x288);
-//        else if (strcmp(argv[2], "640x480") == 0) arducam_set_jpeg_size(sz640x480);
-//        else if (strcmp(argv[2], "800x600") == 0) arducam_set_jpeg_size(sz800x600);
-//        else if (strcmp(argv[2], "1024x768") == 0) arducam_set_jpeg_size(sz1024x768);
-//        else if (strcmp(argv[2], "1280x960") == 0) arducam_set_jpeg_size(sz1280x960);
-//        else if (strcmp(argv[2], "1600x1200") == 0) arducam_set_jpeg_size(sz1600x1200);
-//        else {
-//            printf("Unknown resolution %s\n", argv[2]);
-//            exit(EXIT_FAILURE);
-//        }
-//        sleep(1); // Let auto exposure do it's thing after changing image settings
-//        printf("Changed resolution1 to %s\n", argv[2]);
-//        exit(EXIT_SUCCESS);
-//    } else 
-    	if (strcmp(argv[1], "-c") == 0 && argc == 4) {
-        setup();
-        arducam_set_format(fmtJPEG);
-        arducam_init();
-        // Change to JPEG capture mode and initialize the OV2640 module   
-        if (strcmp(argv[3], "160x120") == 0) arducam_set_jpeg_size(sz160x120);
-        else if (strcmp(argv[3], "176x144") == 0) arducam_set_jpeg_size(sz176x144);
-        else if (strcmp(argv[3], "320x240") == 0) arducam_set_jpeg_size(sz320x240);
-        else if (strcmp(argv[3], "352x288") == 0) arducam_set_jpeg_size(sz352x288);
-        else if (strcmp(argv[3], "640x480") == 0) arducam_set_jpeg_size(sz640x480);
-        else if (strcmp(argv[3], "800x600") == 0) arducam_set_jpeg_size(sz800x600);
-        else if (strcmp(argv[3], "1024x768") == 0) arducam_set_jpeg_size(sz1024x768);
-        else if (strcmp(argv[3], "1280x960") == 0) arducam_set_jpeg_size(sz1280x960);
-        else if (strcmp(argv[3], "1600x1200") == 0) arducam_set_jpeg_size(sz1600x1200);
-        else {
-            printf("Unknown resolution %s\n", argv[3]);
-            exit(EXIT_FAILURE);
-        }
-        sleep(1); // Let auto exposure do it's thing after changing image settings
-        printf("Changed resolution1 to %s\n", argv[3]);
-        delay(1000);
-        
-        // Flush the FIFO
-        arducam_flush_fifo(CAM1_CS);    
-        // Clear the capture done flag
-        arducam_clear_fifo_flag(CAM1_CS);
-        // Start capture
-        printf("Start capture\n");  
-        arducam_start_capture(CAM1_CS);
-        while (!(arducam_read_reg(ARDUCHIP_TRIG,CAM1_CS) & CAP_DONE_MASK)) ;
-        printf(" CAM1 Capture Done\n");
-           
-         // Open the new file
-        FILE *fp1 = fopen(argv[2], "w+");
+  	if (strcmp(argv[1], "-c") == 0 && argc == 4) 
+  	{
+      setup();
+      arducam_set_format(fmtJPEG);
+      arducam_init();
+      // Change to JPEG capture mode and initialize the OV2640 module   
+      if (strcmp(argv[3], "160x120") == 0) arducam_set_jpeg_size(sz160x120);
+      else if (strcmp(argv[3], "176x144") == 0) arducam_set_jpeg_size(sz176x144);
+      else if (strcmp(argv[3], "320x240") == 0) arducam_set_jpeg_size(sz320x240);
+      else if (strcmp(argv[3], "352x288") == 0) arducam_set_jpeg_size(sz352x288);
+      else if (strcmp(argv[3], "640x480") == 0) arducam_set_jpeg_size(sz640x480);
+      else if (strcmp(argv[3], "800x600") == 0) arducam_set_jpeg_size(sz800x600);
+      else if (strcmp(argv[3], "1024x768") == 0) arducam_set_jpeg_size(sz1024x768);
+      else if (strcmp(argv[3], "1280x960") == 0) arducam_set_jpeg_size(sz1280x960);
+      else if (strcmp(argv[3], "1600x1200") == 0) arducam_set_jpeg_size(sz1600x1200);
+      else {
+      printf("Unknown resolution %s\n", argv[3]);
+      exit(EXIT_FAILURE);
+      }
+      sleep(1); // Let auto exposure do it's thing after changing image settings
+      printf("Changed resolution1 to %s\n", argv[3]);
+      delay(1000);
+      
+      // Flush the FIFO
+      arducam_flush_fifo(CAM1_CS);    
+      // Clear the capture done flag
+      arducam_clear_fifo_flag(CAM1_CS);
+      // Start capture
+      printf("Start capture\n");  
+      arducam_start_capture(CAM1_CS);
+      while (!(arducam_read_reg(ARDUCHIP_TRIG,CAM1_CS) & CAP_DONE_MASK)) ;
+      printf("CAM1 Capture Done\n");
+              
+       // Open the new file
+      FILE *fp1 = fopen(argv[2], "w+");   
+      if (!fp1) {
+          printf("Error: could not open %s\n", argv[2]);
+          exit(EXIT_FAILURE);
+      }
        
-        
-        if (!fp1) {
-            printf("Error: could not open %s\n", argv[2]);
-            exit(EXIT_FAILURE);
-        }
-         
-        printf("Reading FIFO\n");
-        
-        i = 0;
-        temp = arducam_read_fifo(CAM1_CS);
-        // Write first image data to buffer
-        buf[i++] = temp;
-        // Read JPEG data from FIFO
-        while((temp != 0xD9) | (temp_last != 0xFF)) {
-            temp_last = temp;
-            temp = arducam_read_fifo(CAM1_CS);
-            // Write image data to buffer if not full
-            if(i < BUF_SIZE) {
-                buf[i++] = temp;
-            } else {
-                // Write BUF_SIZE uint8_ts image data to file
-                fwrite(buf, BUF_SIZE, 1, fp1);
-                i = 0;
-                buf[i++] = temp;
-            }
-        }
-        // Write the remain uint8_ts in the buffer
-        if(i > 0) {
-            fwrite(buf, i, 1, fp1);
-        }
+      printf("Reading FIFO\n");    
+      size_t len = read_fifo_length(CAM1_CS);
+      if (len >= 393216){
+		   printf("Over size.");
+		    exit(EXIT_FAILURE);
+		  }else if (len == 0 ){
+		    printf("Size is 0.");
+		    exit(EXIT_FAILURE);
+		  } 
+		  digitalWrite(CAM1_CS,LOW);  //Set CS low       
+      set_fifo_burst(BURST_FIFO_READ);
+      arducam_spi_transfers(buffer,1);//dummy read  
+      int32_t i=0;
+      while(len>4096)
+      {	 
+      	arducam_transfers(&buffer[i],4096);
+      	len -= 4096;
+      	i += 4096;
+      }
+      arducam_spi_transfers(&buffer[i],len); 
 
-        // Close the file
-        fclose(fp1);
-        // Clear the capture done flag
-        arducam_clear_fifo_flag(CAM1_CS);
+      fwrite(buffer, len+i, 1, fp1);
+      digitalWrite(CAM1_CS,HIGH);  //Set CS HIGH
+       //Close the file
+      delay(100);
+      fclose(fp1);  
+      // Clear the capture done flag
+      arducam_clear_fifo_flag(CAM1_CS);
 
-    } else {
-        printf("Error: unknown or missing argument.\n");
-        exit(EXIT_FAILURE);
-    }
-    exit(EXIT_SUCCESS);
+  } else {
+      printf("Error: unknown or missing argument.\n");
+      exit(EXIT_FAILURE);
+  }
+  exit(EXIT_SUCCESS);
 }
