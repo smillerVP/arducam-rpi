@@ -1,4 +1,8 @@
+/*-----------------------------------------
 
+//Update History:
+//2016/06/13 	V1.1	by Lee	add support for burst mode
+--------------------------------------*/
 #include <string.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -11,7 +15,8 @@
 #define OV5642_CHIPID_HIGH 0x300a
 #define OV5642_CHIPID_LOW 0x300b
 
-#define BUF_SIZE (128*1024)
+#define BUF_SIZE (384*1024)
+uint8_t buffer[BUF_SIZE] = {0xFF};
 
 void setup()
 {
@@ -47,10 +52,6 @@ void setup()
 
 int main(int argc, char *argv[])
 {
-    uint8_t buf[BUF_SIZE];
-    int i = 0;
-    uint8_t temp, temp_last;
-  
     if (argc == 1) {
         printf("Usage: %s [-s <resolution>] | [-c <filename]", argv[0]);
         printf(" -s <resolution> Set resolution, valid resolutions are:\n");      
@@ -111,32 +112,33 @@ int main(int argc, char *argv[])
           
         printf("Reading FIFO\n");
         
-        i = 0;
-        temp = arducam_read_fifo(CAM1_CS);
-        // Write first image data to buffer
-        buf[i++] = temp;
-        // Read JPEG data from FIFO
-        while((temp != 0xD9) | (temp_last != 0xFF)) {
-            temp_last = temp;
-            temp = arducam_read_fifo(CAM1_CS);
-            // Write image data to buffer if not full
-            if(i < BUF_SIZE) {
-                buf[i++] = temp;
-            } else {
-                // Write BUF_SIZE uint8_ts image data to file
-                fwrite(buf, BUF_SIZE, 1, fp1);
-                i = 0;
-                buf[i++] = temp;
-            }
-        }
-        // Write the remain uint8_ts in the buffer
-        if(i > 0) {
-            fwrite(buf, i, 1, fp1);
-        }
-        // Close the file
-        fclose(fp1);
-        // Clear the capture done flag
-        arducam_clear_fifo_flag(CAM1_CS);
+        size_t len = read_fifo_length(CAM1_CS);
+	      if (len >= 393216){
+			   printf("Over size.");
+			    exit(EXIT_FAILURE);
+			  }else if (len == 0 ){
+			    printf("Size is 0.");
+			    exit(EXIT_FAILURE);
+			  } 
+			  digitalWrite(CAM1_CS,LOW);  //Set CS low       
+	      set_fifo_burst(BURST_FIFO_READ);
+	      arducam_spi_transfers(buffer,1);//dummy read  
+	      int32_t i=0;
+	      while(len>4096)
+	      {	 
+	      	arducam_transfers(&buffer[i],4096);
+	      	len -= 4096;
+	      	i += 4096;
+	      }
+	      arducam_spi_transfers(&buffer[i],len); 
+	
+	      fwrite(buffer, len+i, 1, fp1);
+	      digitalWrite(CAM1_CS,HIGH);  //Set CS HIGH
+	       //Close the file
+	      delay(100);
+	      fclose(fp1);  
+	      // Clear the capture done flag
+	      arducam_clear_fifo_flag(CAM1_CS);
     
     } else {
         printf("Error: unknown or missing argument.\n");

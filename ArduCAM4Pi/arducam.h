@@ -55,6 +55,8 @@
 /*------------------------------------
 	Revision History:
 	2015/01/16 	V1.0	by Lee	first release for Raspberry Pi
+	
+	2016/06/13 	V1.1	by Lee	add support for burst mode
 
 --------------------------------------*/
 
@@ -194,6 +196,8 @@ struct CAM {
 #define GPIO_RESET_MASK			0x01  //0 = default state,		1 =  Sensor reset IO value
 #define GPIO_PWDN_MASK			0x02  //0 = Sensor power down IO value, 1 = Sensor power enable IO value
 
+#define BURST_FIFO_READ			0x3C  //Burst FIFO read operation
+
 
 #define ARDUCHIP_TIM       		0x03  //Timming control
 #define HREF_LEVEL_MASK    		0x01  //0 = High active , 		1 = Low active
@@ -219,6 +223,11 @@ struct CAM {
 #define SHUTTER_MASK       		0x02
 #define CAP_DONE_MASK      		0x08
 
+
+#define FIFO_SIZE1				0x42  //Camera write FIFO size[7:0] for burst to read
+#define FIFO_SIZE2				0x43  //Camera write FIFO size[15:8]
+#define FIFO_SIZE3				0x44  //Camera write FIFO size[18:16]
+
 /****************************************************/
 
 
@@ -233,16 +242,23 @@ void arducam_flush_fifo(int SPI_CS);
 void arducam_start_capture(int SPI_CS);
 void arducam_clear_fifo_flag(int SPI_CS);
 uint8_t arducam_read_fifo(int SPI_CS);
+uint8_t arducam_burst_read_fifo();
+void set_fifo_burst(uint8_t data);
+void arducam_transfers(uint8_t *buf, uint32_t size);
 
 uint8_t arducam_read_reg(uint8_t addr, int SPI_CS);
-void arducam_write_reg(uint8_t addr, uint8_t data, int SPI_CS);
 
+void arducam_write_reg(uint8_t addr, uint8_t data, int SPI_CS);
+void arducam_transfer(uint8_t data);
+uint32_t read_fifo_length(int SPI_CS);
 void arducam_set_jpeg_size(jpeg_size_t size);
 void arducam_set_format(image_format_t fmt);
 void arducam_OV5642_set_jpeg_size(jpeg_size_t size);
 
 void set_bit(uint8_t addr, uint8_t bit, int SPI_CS);
 void clear_bit(uint8_t addr, uint8_t bit, int SPI_CS);
+
+
 
 #include "arducam_arch.h"
 

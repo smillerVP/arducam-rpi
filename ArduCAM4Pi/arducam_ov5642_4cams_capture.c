@@ -1,4 +1,9 @@
+/*-----------------------------------------
 
+//Update History:
+//2016/06/13 	V1.1	by Lee	add support for burst mode
+
+--------------------------------------*/
 
 #include <string.h>
 #include <stdio.h>
@@ -12,7 +17,8 @@
 #define OV5642_CHIPID_HIGH 0x300a
 #define OV5642_CHIPID_LOW 0x300b
 
-#define BUF_SIZE (128*1024)
+#define BUF_SIZE (384*1024)
+uint8_t buffer[BUF_SIZE] = {0xFF};
 
 void setup()
 {
@@ -84,11 +90,7 @@ void setup()
 }
 
 int main(int argc, char *argv[])
-{
-    uint8_t buf[BUF_SIZE];
-    int i = 0;
-    uint8_t temp, temp_last;
-      
+{     
     if (argc == 1) {
         printf("Usage: %s [-s <resolution>] | [-c <filename]", argv[0]);
         printf(" -s <resolution> Set resolution, valid resolutions are:\n");
@@ -189,123 +191,82 @@ int main(int argc, char *argv[])
         }
            
         printf("Reading FIFO\n");
+        size_t len1 = read_fifo_length(CAM1_CS);
+         size_t len2 = read_fifo_length(CAM2_CS);
+          size_t len3 = read_fifo_length(CAM3_CS);
+           size_t len4 = read_fifo_length(CAM4_CS);
+      if ((len1>=393216)||(len2>=393216)||(len3>=393216)||(len4>=393216)){
+		   printf("Over size.");
+		    exit(EXIT_FAILURE);
+		  }
+		  if (len1 == 0 ) printf("Size1 is 0."); 
+		   if (len2 == 0 ) printf("Size2 is 0."); 
+		  	if (len3 == 0 ) printf("Size3 is 0."); 
+		  		if (len4 == 0 ) printf("Size4 is 0."); 
+		  			
+      int32_t i=0; 
+      digitalWrite(CAM1_CS,LOW);  //Set CS1 low       
+      set_fifo_burst(BURST_FIFO_READ);
+      arducam_spi_transfers(buffer,1);//dummy read  
+      while(len1>4096)
+      {	 
+      	arducam_transfers(&buffer[i],4096);
+      	len1 -= 4096; i += 4096;
+      }
+      arducam_spi_transfers(&buffer[i],len1); 
+      fwrite(buffer, len1+i, 1, fp1); i=0;
+      digitalWrite(CAM1_CS,HIGH);  //Set CS1 HIGH
+      
         
+      digitalWrite(CAM2_CS,LOW);  //Set CS2 low       
+      set_fifo_burst(BURST_FIFO_READ);
+      arducam_spi_transfers(buffer,1);//dummy read  
+      while(len2>4096)
+      {	 
+      	arducam_transfers(&buffer[i],4096);
+      	len2 -= 4096; i += 4096;
+      }
+      arducam_spi_transfers(&buffer[i],len2); 
+      fwrite(buffer, len2+i, 1, fp2); i=0;
+      digitalWrite(CAM2_CS,HIGH);  //Set CS2 HIGH
         
-       //Save the CAM1_CS picture 
-       
-        i = 0;
-        temp = arducam_read_fifo(CAM1_CS);
-        // Write first image data to buffer
-        buf[i++] = temp;
-        // Read JPEG data from FIFO
-        while((temp != 0xD9) | (temp_last != 0xFF)) {
-            temp_last = temp;
-            temp = arducam_read_fifo(CAM1_CS);
-            // Write image data to buffer if not full
-            if(i < BUF_SIZE) {
-                buf[i++] = temp;
-            } else {
-                // Write BUF_SIZE uint8_ts image data to file
-                fwrite(buf, BUF_SIZE, 1, fp1);
-                i = 0;
-                buf[i++] = temp;
-            }
-        }
-        // Write the remain uint8_ts in the buffer
-        if(i > 0) {
-            fwrite(buf, i, 1, fp1);
-        }
-        // Close the file
-        fclose(fp1);
-        // Clear the capture done flag
-        arducam_clear_fifo_flag(CAM1_CS);
-        
-        
-        //Save the CAM2_CS picture 
-        i = 0;
-        temp = arducam_read_fifo(CAM2_CS);
-        // Write first image data to buffer
-        buf[i++] = temp;
-        // Read JPEG data from FIFO
-        while((temp != 0xD9) | (temp_last != 0xFF)) {
-            temp_last = temp;
-            temp = arducam_read_fifo(CAM2_CS);
-            // Write image data to buffer if not full
-            if(i < BUF_SIZE) {
-                buf[i++] = temp;
-            } else {
-                // Write BUF_SIZE uint8_ts image data to file
-                fwrite(buf, BUF_SIZE, 1, fp2);
-                i = 0;
-                buf[i++] = temp;
-            }
-        }
-        // Write the remain uint8_ts in the buffer
-        if(i > 0) {
-            fwrite(buf, i, 1, fp2);
-        }
-        // Close the file
-        fclose(fp2);
-        // Clear the capture done flag
-        arducam_clear_fifo_flag(CAM2_CS);
-        
-        
-        //Save the CAM3_CS picture 
-        i = 0;
-        temp = arducam_read_fifo(CAM3_CS);
-        // Write first image data to buffer
-        buf[i++] = temp;
-        // Read JPEG data from FIFO
-        while((temp != 0xD9) | (temp_last != 0xFF)) {
-            temp_last = temp;
-            temp = arducam_read_fifo(CAM3_CS);
-            // Write image data to buffer if not full
-            if(i < BUF_SIZE) {
-                buf[i++] = temp;
-            } else {
-                // Write BUF_SIZE uint8_ts image data to file
-                fwrite(buf, BUF_SIZE, 1, fp3);
-                i = 0;
-                buf[i++] = temp;
-            }
-        }
-        // Write the remain uint8_ts in the buffer
-        if(i > 0) {
-            fwrite(buf, i, 1, fp3);
-        }
-        // Close the file
+      
+      digitalWrite(CAM3_CS,LOW);  //Set CS3 low       
+      set_fifo_burst(BURST_FIFO_READ);
+      arducam_spi_transfers(buffer,1);//dummy read  
+      while(len3>4096)
+      {	 
+      	arducam_transfers(&buffer[i],4096);
+      	len3 -= 4096; i += 4096;
+      }
+      arducam_spi_transfers(&buffer[i],len3); 
+      fwrite(buffer, len3+i, 1, fp3); i=0;
+      digitalWrite(CAM3_CS,HIGH);  //Set CS3 HIGH
+      
+      
+      digitalWrite(CAM4_CS,LOW);  //Set CS4 low       
+      set_fifo_burst(BURST_FIFO_READ);
+      arducam_spi_transfers(buffer,1);//dummy read  
+      while(len4>4096)
+      {	 
+      	arducam_transfers(&buffer[i],4096);
+      	len4 -= 4096; i += 4096;
+      }
+      arducam_spi_transfers(&buffer[i],len4); 
+      fwrite(buffer, len4+i, 1, fp4); i=0;
+      digitalWrite(CAM4_CS,HIGH);  //Set CS4 HIGH
+      
+      // Close the file
+      fclose(fp1);
+       fclose(fp2);
         fclose(fp3);
-        // Clear the capture done flag
+         fclose(fp4);
+      // Clear the capture done flag
+      arducam_clear_fifo_flag(CAM1_CS);
+       arducam_clear_fifo_flag(CAM2_CS);
         arducam_clear_fifo_flag(CAM3_CS);
+         arducam_clear_fifo_flag(CAM4_CS);
         
-         //Save the CAM4_CS picture
-        i = 0;
-        temp = arducam_read_fifo(CAM4_CS);
-        // Write first image data to buffer
-        buf[i++] = temp;
-        // Read JPEG data from FIFO
-        while((temp != 0xD9) | (temp_last != 0xFF)) {
-            temp_last = temp;
-            temp = arducam_read_fifo(CAM4_CS);
-            // Write image data to buffer if not full
-            if(i < BUF_SIZE) {
-                buf[i++] = temp;
-            } else {
-                // Write BUF_SIZE uint8_ts image data to file
-                fwrite(buf, BUF_SIZE, 1, fp4);
-                i = 0;
-                buf[i++] = temp;
-            }
-        }
-        // Write the remain uint8_ts in the buffer
-        if(i > 0) {
-            fwrite(buf, i, 1, fp4);
-        }
-        // Close the file
-        fclose(fp4);
-        // Clear the capture done flag
-        arducam_clear_fifo_flag(CAM4_CS);
-
     } else {
         printf("Error: unknown or missing argument.\n");
         exit(EXIT_FAILURE);

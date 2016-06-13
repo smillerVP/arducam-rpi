@@ -1,3 +1,10 @@
+/*-----------------------------------------
+
+//Update History:
+//2016/06/13 	V1.1	by Lee	add support for burst mode
+
+--------------------------------------*/
+
 #ifndef __ARDUCAM_ARCH_H__
 #define __ARDUCAM_ARCH_H__
 
@@ -8,9 +15,12 @@
 bool wiring_init(void);
 bool arducam_spi_init(int SPI_CS);
 bool arducam_i2c_init(uint8_t sensor_addr);
-
 void arducam_spi_write(uint8_t address, uint8_t value, int SPI_CS);
 uint8_t arducam_spi_read(uint8_t address, int SPI_CS);
+
+void arducam_spi_transfer(uint8_t data);
+void arducam_spi_transfers(uint8_t *buf, uint32_t size);
+
 
 // Delay execution for delay milliseconds
 void arducam_delay_ms(uint32_t delay);

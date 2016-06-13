@@ -1,3 +1,10 @@
+/*-----------------------------------------
+
+//Update History:
+//2016/06/13 	V1.1	by Lee	add support for burst mode
+
+--------------------------------------*/
+
 #include <string.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -11,7 +18,6 @@
 
 #define	SPI_ARDUCAM_SPEED	1000000
 #define	SPI_ARDUCAM		      0
-
 
 static int FD;
 
@@ -32,7 +38,6 @@ bool wiring_init(void)
 	int spi = wiringPiSPISetup(SPI_ARDUCAM, SPI_ARDUCAM_SPEED);   
 	return spi != -1;
 }
-
 
 bool arducam_i2c_init(uint8_t sensor_addr)
 {
@@ -61,6 +66,7 @@ void arducam_spi_write(uint8_t address, uint8_t value, int SPI_CS)
 	 	}
 }
 
+
 uint8_t arducam_spi_read(uint8_t address,int SPI_CS)
 {
 	uint8_t spiData[2];
@@ -75,6 +81,19 @@ uint8_t arducam_spi_read(uint8_t address,int SPI_CS)
 	 		  digitalWrite(SPI_CS,HIGH);
   		}
   	return spiData[1];
+}
+
+
+void arducam_spi_transfers(uint8_t *buf, uint32_t size)
+{
+	 wiringPiSPIDataRW (SPI_ARDUCAM, buf, size) ;
+}
+
+void arducam_spi_transfer(uint8_t data)
+{
+	uint8_t spiData [1] ;
+	 spiData [0] = data ;
+	 wiringPiSPIDataRW (SPI_ARDUCAM, spiData, 1) ;
 }
 
 uint8_t arducam_i2c_write(uint8_t regID, uint8_t regDat)
